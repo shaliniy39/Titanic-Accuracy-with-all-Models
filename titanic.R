@@ -4,6 +4,7 @@ dataset = dataset[c(2,3,5:8)]
 dataset2 = read.csv("test_titanic.csv")
 dataset2 = dataset2[c(2,4:7)]
 x=nrow(dataset)
+library(ggplot2)
 
 #missing data
 
@@ -29,7 +30,7 @@ y_pred = predict(regressor, newdata = dataset2)
 dig_pred = ifelse(y_pred >= 0.5, 1, 0)
 
 #install.packages('ggplot2')
-library(ggplot2)
+
 df <- data.frame(dataset)
 ggplot(data = dataset,aes(x = Sex))+ 
   geom_bar(stat = "count",aes(fill = "Sex"))
@@ -39,6 +40,5 @@ ggplot(data = dataset,aes(x = Sex))+
 #   geom_bar(data = dataset,aes(x = Survived,y = Pclass),
 #            stat = "identity" ,width = 0.5,color = "red")
 # 
-
 
               

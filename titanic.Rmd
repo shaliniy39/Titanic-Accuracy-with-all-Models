@@ -1,0 +1,99 @@
+---
+title: "Simple RandomForest for Titanic"
+output: 
+  html_document:
+  number_sections: yes
+theme: flatly
+highlight: tango
+toc: yes
+toc_depth: 2
+---   
+
+#Loading libarries
+```{r echo = TRUE, message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(ggplot2)
+library(e1071)
+library(xgboost)
+library(caTools)
+library(randomForest)
+```
+
+##Loading dataset
+```{r echo = TRUE, message=FALSE, warning=FALSE}
+
+dataset = read.csv("training titanic.csv")
+```
+#Cleaning data
+
+###Droping columns that are not necessary
+```{r echo = TRUE, message=FALSE, warning=FALSE}
+
+undesired <- c('PassengerId','Name', 'Ticket','Cabin')
+dataset = dataset %>%
+  select(-one_of(undesired))
+```
+
+##Split data
+##Split the dataset as train and test sets to predict the results
+
+```{r echo = TRUE, message=FALSE, warning=FALSE}
+set.seed(123)
+split = sample.split(dataset$Survived,SplitRatio = 0.9)
+train = subset(dataset,split = TRUE)
+test = subset(dataset,split = FALSE)
+
+```
+##missing data
+####Repalcing missing data with median value
+
+```{r echo = TRUE, message=FALSE, warning=FALSE}
+
+train$Age = ifelse(is.na(train$Age), median(train$Age,na.rm = TRUE),
+                     train$Age) 
+test$Age = ifelse(is.na(test$Age), median(test$Age,na.rm = TRUE),
+                     test$Age) 
+
+#categorical data
+train$Sex = factor(train$Sex,
+                     levels = c('female','male'),
+                     labels = c(1, 2))
+test$Sex = factor(test$Sex,
+                     levels = c('female','male'),
+                     labels = c(1, 2))
+train$Embarked = factor(train$Embarked,
+                     levels = c('S','C','Q'),
+                     labels = c(1,2,3))
+test$Embarked = factor(test$Embarked,
+                     levels = c('S','C','Q'),
+                     labels = c(1,2,3))                     
+                     
+train$Embarked = ifelse(is.na(train$Embarked),1,train$Embarked)
+test$Embarked = ifelse(is.na(test$Embarked),1,test$Embarked)
+
+                     
+train$Survived = factor(train$Survived)
+test$Survived = factor(test$Survived)
+```
+#Feature engineeering 
+#Adding 2 new columns familysize and IsAlone
+```{r echo = TRUE, message=FALSE, warning=FALSE}
+
+train$FamilySize = train$SibSp + train$Parch +1
+test$FamilySize = test$SibSp + test$Parch + 1
+```
+
+#Machine learning
+
+##RandomForest implementation
+```{r echo = TRUE, message=FALSE, warning=FALSE}
+
+predict_rf = randomForest(x = train[,2:9],y = train$Survived,ntree = 100,importance = T)
+pred2 = predict(predict_rf,newdata = test[,2:9])
+
+###Accuracy
+cm = table(test[,1],pred2)
+accuracy = (cm[1]+cm[4])/((cm[1]+cm[4])+(cm[2]+cm[3]))
+print(accuracy)
+```
